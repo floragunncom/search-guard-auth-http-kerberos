@@ -15,6 +15,7 @@
 package com.floragunn.dlic.auth.http.kerberos;
 
 import java.io.Serializable;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.AccessController;
@@ -57,8 +58,8 @@ public class HTTPSpnegoAuthenticator implements HTTPAuthenticator {
     protected final ESLogger log = Loggers.getLogger(this.getClass());
     
     private final boolean stripRealmFromPrincipalName;
-    private final String acceptorPrincipal;
-    private final Path acceptorKeyTabPath;
+    private String acceptorPrincipal;
+    private Path acceptorKeyTabPath;
 
     public HTTPSpnegoAuthenticator(final Settings settings) {
         super();
@@ -98,10 +99,27 @@ public class HTTPSpnegoAuthenticator implements HTTPAuthenticator {
                 log.debug("krb5_filepath (was not set or configured, set to default): /etc/krb5.conf");
             }
         }
-
+        
         stripRealmFromPrincipalName = settings.getAsBoolean("strip_realm_from_principal", true);
         acceptorPrincipal = settings.get("acceptor_principal");
-        acceptorKeyTabPath = configDir.resolve(settings.get("searchguard.kerberos.acceptor_keytab_filepath"));
+        String _acceptorKeyTabPath = settings.get("searchguard.kerberos.acceptor_keytab_filepath");
+        
+        if(acceptorPrincipal == null || acceptorPrincipal.length() == 0) {
+            log.error("acceptor_principal must not be null or empty. Kerberos authentication will not work");
+            acceptorPrincipal = null;
+        } 
+        
+        if(_acceptorKeyTabPath == null || _acceptorKeyTabPath.length() == 0) {
+            log.error("searchguard.kerberos.acceptor_keytab_filepath must not be null or empty. Kerberos authentication will not work");
+            acceptorKeyTabPath = null;
+        } else {
+            acceptorKeyTabPath = configDir.resolve(settings.get("searchguard.kerberos.acceptor_keytab_filepath"));
+            
+            if(!Files.exists(acceptorKeyTabPath)) {
+                log.error("Unable to read keytab from {} - Maybe the file does not exist or is not readable. Kerberos authentication will not work", acceptorKeyTabPath);
+                acceptorKeyTabPath = null;
+            }
+        }
         
         log.debug("strip_realm_from_principal {}", stripRealmFromPrincipalName);
         log.debug("acceptor_principal {}", acceptorPrincipal);
@@ -127,6 +145,11 @@ public class HTTPSpnegoAuthenticator implements HTTPAuthenticator {
     }
 
     private AuthCredentials extractCredentials0(final RestRequest request) {
+        
+        if (acceptorPrincipal == null || acceptorKeyTabPath == null) {
+            log.error("Missing acceptor principal or keytab configuration. Kerberos authentication will not work");
+            return null;
+        }
         
         Principal principal = null;
         final String authorizationHeader = request.header("Authorization");
