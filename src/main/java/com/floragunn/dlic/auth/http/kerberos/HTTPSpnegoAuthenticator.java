@@ -101,7 +101,7 @@ public class HTTPSpnegoAuthenticator implements HTTPAuthenticator {
         }
         
         stripRealmFromPrincipalName = settings.getAsBoolean("strip_realm_from_principal", true);
-        acceptorPrincipal = settings.get("acceptor_principal");
+        acceptorPrincipal = settings.get("searchguard.kerberos.acceptor_principal");
         String _acceptorKeyTabPath = settings.get("searchguard.kerberos.acceptor_keytab_filepath");
         
         if(acceptorPrincipal == null || acceptorPrincipal.length() == 0) {
