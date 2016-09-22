@@ -214,11 +214,17 @@ public class HTTPSpnegoAuthenticator implements HTTPAuthenticator {
                 }
 
                 if (principal == null) {
-                    return new AuthCredentials("_incomplete_", outToken);
+                    return new AuthCredentials("_incomplete_", (Object) outToken);
                 }
+                
 
                 final String username = ((SimpleUserPrincipal) principal).getName();
-                return new AuthCredentials(username, outToken).markComplete();
+                
+                if(username == null || username.length() == 0) {
+                    log.error("Got empty or null user from kerberos. Normally this means that you acceptor principal {} does not match the server hostname", acceptorPrincipal);
+                }
+                
+                return new AuthCredentials(username, (Object) outToken).markComplete();
                 
             }
         } else {
@@ -299,10 +305,12 @@ public class HTTPSpnegoAuthenticator implements HTTPAuthenticator {
 
             if (gssName != null) {
                 String name = gssName.toString();
-
                 return stripRealmName(name, strip);
-
+            } else {
+                logger.error("GSS name is null");
             }
+        } else {
+            logger.error("GSS context not established");
         }
 
         return null;
