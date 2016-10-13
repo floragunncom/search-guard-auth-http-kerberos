@@ -77,30 +77,46 @@ public class HTTPSpnegoAuthenticator implements HTTPAuthenticator {
             log.debug("Kerberos debug is NOT enabled");
         }
         
-        Path configDir = new Environment(settings).configFile();
+        final Path configDir = new Environment(settings).configFile();
+        final String krb5PathSetting =  settings.get("searchguard.kerberos.krb5_filepath");
         
-        System.setProperty(KrbConstants.USE_SUBJECT_CREDS_ONLY_PROP, "false");
-        
-        String krb5Path =  settings.get("searchguard.kerberos.krb5_filepath");
-        
-        if(!Strings.isNullOrEmpty(krb5Path)) {
-            
-            if(Paths.get(krb5Path).isAbsolute()) {
-                log.debug("krb5_filepath: {}", krb5Path);
-                System.setProperty(KrbConstants.KRB5_CONF_PROP, krb5Path);
-            } else {
-                krb5Path = configDir.resolve(krb5Path).toAbsolutePath().toString();
-                log.debug("krb5_filepath (resolved from {}): {}", configDir, krb5Path);
-            }
-            
-            System.setProperty(KrbConstants.KRB5_CONF_PROP, krb5Path);
-        } else {
-            if(Strings.isNullOrEmpty(System.getProperty(KrbConstants.KRB5_CONF_PROP))) {
-                System.setProperty(KrbConstants.KRB5_CONF_PROP, "/etc/krb5.conf");
-                log.debug("krb5_filepath (was not set or configured, set to default): /etc/krb5.conf");
-            }
+        final SecurityManager sm = System.getSecurityManager();
+
+        if (sm != null) {
+            sm.checkPermission(new SpecialPermission());
         }
-        
+
+        AccessController.doPrivileged(new PrivilegedAction<Void>() {
+            
+            @Override
+            public Void run() {                        
+                
+                System.setProperty(KrbConstants.USE_SUBJECT_CREDS_ONLY_PROP, "false");
+                
+                String krb5Path = krb5PathSetting;
+                
+                if(!Strings.isNullOrEmpty(krb5Path)) {
+                    
+                    if(Paths.get(krb5Path).isAbsolute()) {
+                        log.debug("krb5_filepath: {}", krb5Path);
+                        System.setProperty(KrbConstants.KRB5_CONF_PROP, krb5Path);
+                    } else {
+                        krb5Path = configDir.resolve(krb5Path).toAbsolutePath().toString();
+                        log.debug("krb5_filepath (resolved from {}): {}", configDir, krb5Path);
+                    }
+                    
+                    System.setProperty(KrbConstants.KRB5_CONF_PROP, krb5Path);
+                } else {
+                    if(Strings.isNullOrEmpty(System.getProperty(KrbConstants.KRB5_CONF_PROP))) {
+                        System.setProperty(KrbConstants.KRB5_CONF_PROP, "/etc/krb5.conf");
+                        log.debug("krb5_filepath (was not set or configured, set to default): /etc/krb5.conf");
+                    }
+                }
+                
+                return null;
+            }
+        });
+                
         stripRealmFromPrincipalName = settings.getAsBoolean("strip_realm_from_principal", true);
         acceptorPrincipal = settings.get("searchguard.kerberos.acceptor_principal");
         String _acceptorKeyTabPath = settings.get("searchguard.kerberos.acceptor_keytab_filepath");
