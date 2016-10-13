@@ -15,7 +15,7 @@
 
   <groupId>com.floragunn</groupId>
   <artifactId>dlic-search-guard-auth-http-kerberos</artifactId>
-  <version>2.4-2-SNAPSHOT</version>
+  <version>5.0-2-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <name>Search Guard</name>
@@ -35,9 +35,9 @@
   </distributionManagement>
 
   <properties>
-    <sg2.version>2.4.0.6</sg2.version>
+    <sg2.version>5.0.0-rc1-6a</sg2.version>
     <apache.ds.version>2.0.0-M21</apache.ds.version>
-    <elasticsearch.version>2.4.0</elasticsearch.version>
+    <elasticsearch.version>5.0.0-rc1</elasticsearch.version>
     <dependency.locations.enabled>false</dependency.locations.enabled>
   </properties>
 
@@ -67,7 +67,7 @@
   <parent>
     <groupId>org.sonatype.oss</groupId>
     <artifactId>oss-parent</artifactId>
-    <version>7</version>
+    <version>9</version>
   </parent>
 
   <dependencies>
@@ -75,6 +75,13 @@
       <groupId>com.floragunn</groupId>
       <artifactId>search-guard-2</artifactId>
       <version>${sg2.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    
+     <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-core</artifactId>
+      <version>2.6.2</version>
       <scope>provided</scope>
     </dependency>
 
@@ -97,7 +104,7 @@
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
-      <version>4.11</version>
+      <version>4.12</version>
       <scope>test</scope>
     </dependency>
 
@@ -105,13 +112,6 @@
       <groupId>org.apache.directory.server</groupId>
       <artifactId>apacheds-all</artifactId>
       <version>${apache.ds.version}</version>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-log4j12</artifactId>
-      <version>1.7.7</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -164,7 +164,7 @@
             <configuration>
               <rules>
                 <requireJavaVersion>
-                  <version>1.7</version>
+                  <version>1.8</version>
                 </requireJavaVersion>
               </rules>
             </configuration>
@@ -203,8 +203,8 @@
         <artifactId>maven-compiler-plugin</artifactId>
         <version>3.3</version>
         <configuration>
-          <source>1.7</source>
-          <target>1.7</target>
+          <source>1.8</source>
+          <target>1.8</target>
           <encoding>UTF-8</encoding>
           <showDeprecation>true</showDeprecation>
           <showWarnings>true</showWarnings>

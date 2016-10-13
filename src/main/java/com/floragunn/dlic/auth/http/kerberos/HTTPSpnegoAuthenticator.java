@@ -28,10 +28,11 @@ import javax.security.auth.Subject;
 import javax.security.auth.login.LoginException;
 import javax.xml.bind.DatatypeConverter;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.elasticsearch.SpecialPermission;
-import org.elasticsearch.common.logging.ESLogger;
-import org.elasticsearch.common.logging.Loggers;
 import org.elasticsearch.common.settings.Settings;
+import org.elasticsearch.common.util.concurrent.ThreadContext;
 import org.elasticsearch.env.Environment;
 import org.elasticsearch.rest.BytesRestResponse;
 import org.elasticsearch.rest.RestChannel;
@@ -55,7 +56,7 @@ public class HTTPSpnegoAuthenticator implements HTTPAuthenticator {
         printLicenseInfo();
     }
     
-    protected final ESLogger log = Loggers.getLogger(this.getClass());
+    protected final Logger log = LogManager.getLogger(this.getClass());
     
     private final boolean stripRealmFromPrincipalName;
     private String acceptorPrincipal;
@@ -127,7 +128,7 @@ public class HTTPSpnegoAuthenticator implements HTTPAuthenticator {
     }
     
     @Override
-    public AuthCredentials extractCredentials(final RestRequest request) {
+    public AuthCredentials extractCredentials(final RestRequest request, ThreadContext threadContext) {
         final SecurityManager sm = System.getSecurityManager();
 
         if (sm != null) {
@@ -236,7 +237,7 @@ public class HTTPSpnegoAuthenticator implements HTTPAuthenticator {
 
     @Override
     public boolean reRequestAuthentication(final RestChannel channel, AuthCredentials creds) {
-        final BytesRestResponse wwwAuthenticateResponse = new BytesRestResponse(RestStatus.UNAUTHORIZED);
+        final BytesRestResponse wwwAuthenticateResponse = new BytesRestResponse(RestStatus.UNAUTHORIZED, "");
         
         if(creds == null || creds.getNativeCredentials() == null) {
             wwwAuthenticateResponse.addHeader("WWW-Authenticate", "Negotiate");
@@ -276,11 +277,11 @@ public class HTTPSpnegoAuthenticator implements HTTPAuthenticator {
     //borrowed from Apache Tomcat 8 http://svn.apache.org/repos/asf/tomcat/tc8.0.x/trunk/
     private static class AuthenticateAction implements PrivilegedAction<Principal> {
 
-        private final ESLogger logger;
+        private final Logger logger;
         private final GSSContext gssContext;
         private final boolean strip;
 
-        private AuthenticateAction(final ESLogger logger, final GSSContext gssContext, final boolean strip) {
+        private AuthenticateAction(final Logger logger, final GSSContext gssContext, final boolean strip) {
             super();
             this.logger = logger;
             this.gssContext = gssContext;
@@ -294,7 +295,7 @@ public class HTTPSpnegoAuthenticator implements HTTPAuthenticator {
     }
 
     //borrowed from Apache Tomcat 8 http://svn.apache.org/repos/asf/tomcat/tc8.0.x/trunk/
-    private static String getUsernameFromGSSContext(final GSSContext gssContext, final boolean strip, final ESLogger logger) {
+    private static String getUsernameFromGSSContext(final GSSContext gssContext, final boolean strip, final Logger logger) {
         if (gssContext.isEstablished()) {
             GSSName gssName = null;
             try {
