@@ -57,73 +57,99 @@ public class HTTPSpnegoAuthenticator implements HTTPAuthenticator {
     
     protected final ESLogger log = Loggers.getLogger(this.getClass());
     
-    private final boolean stripRealmFromPrincipalName;
+    private boolean stripRealmFromPrincipalName;
     private String acceptorPrincipal;
     private Path acceptorKeyTabPath;
 
     public HTTPSpnegoAuthenticator(final Settings settings) {
         super();
         
-        if (settings.getAsBoolean("krb_debug", false)) {
-            System.out.println("Kerberos debug is enabled");
-            log.info("Kerberos debug is enabled on stdout");
-            JaasKrbUtil.ENABLE_DEBUG = true;
-            System.setProperty("sun.security.krb5.debug", "true");
-            System.setProperty("java.security.debug", "all");
-            System.setProperty("java.security.auth.debug", "all");
-            System.setProperty("sun.security.spnego.debug", "true");
-        } else {
-            log.debug("Kerberos debug is NOT enabled");
-        }
-        
-        Path configDir = new Environment(settings).configFile();
-        
-        System.setProperty(KrbConstants.USE_SUBJECT_CREDS_ONLY_PROP, "false");
-        
-        String krb5Path =  settings.get("searchguard.kerberos.krb5_filepath");
-        
-        if(!Strings.isNullOrEmpty(krb5Path)) {
+        try {
             
-            if(Paths.get(krb5Path).isAbsolute()) {
-                log.debug("krb5_filepath: {}", krb5Path);
-                System.setProperty(KrbConstants.KRB5_CONF_PROP, krb5Path);
+            if (settings.getAsBoolean("krb_debug", false)) {
+                System.out.println("Kerberos debug is enabled");
+                log.info("Kerberos debug is enabled on stdout");
+                JaasKrbUtil.ENABLE_DEBUG = true;
+                System.setProperty("sun.security.krb5.debug", "true");
+                System.setProperty("java.security.debug", "all");
+                System.setProperty("java.security.auth.debug", "all");
+                System.setProperty("sun.security.spnego.debug", "true");
             } else {
-                krb5Path = configDir.resolve(krb5Path).toAbsolutePath().toString();
-                log.debug("krb5_filepath (resolved from {}): {}", configDir, krb5Path);
+                log.debug("Kerberos debug is NOT enabled");
             }
             
-            System.setProperty(KrbConstants.KRB5_CONF_PROP, krb5Path);
-        } else {
-            if(Strings.isNullOrEmpty(System.getProperty(KrbConstants.KRB5_CONF_PROP))) {
-                System.setProperty(KrbConstants.KRB5_CONF_PROP, "/etc/krb5.conf");
-                log.debug("krb5_filepath (was not set or configured, set to default): /etc/krb5.conf");
-            }
-        }
-        
-        stripRealmFromPrincipalName = settings.getAsBoolean("strip_realm_from_principal", true);
-        acceptorPrincipal = settings.get("searchguard.kerberos.acceptor_principal");
-        String _acceptorKeyTabPath = settings.get("searchguard.kerberos.acceptor_keytab_filepath");
-        
-        if(acceptorPrincipal == null || acceptorPrincipal.length() == 0) {
-            log.error("acceptor_principal must not be null or empty. Kerberos authentication will not work");
-            acceptorPrincipal = null;
-        } 
-        
-        if(_acceptorKeyTabPath == null || _acceptorKeyTabPath.length() == 0) {
-            log.error("searchguard.kerberos.acceptor_keytab_filepath must not be null or empty. Kerberos authentication will not work");
-            acceptorKeyTabPath = null;
-        } else {
-            acceptorKeyTabPath = configDir.resolve(settings.get("searchguard.kerberos.acceptor_keytab_filepath"));
+            final Path configDir = new Environment(settings).configFile();
             
-            if(!Files.exists(acceptorKeyTabPath)) {
-                log.error("Unable to read keytab from {} - Maybe the file does not exist or is not readable. Kerberos authentication will not work", acceptorKeyTabPath);
-                acceptorKeyTabPath = null;
+            final String krb5PathSetting =  settings.get("searchguard.kerberos.krb5_filepath");
+            
+            final SecurityManager sm = System.getSecurityManager();
+            
+            if (sm != null) {
+                sm.checkPermission(new SpecialPermission());
             }
-        }
+            
+            AccessController.doPrivileged(new PrivilegedAction<Void>() {
+                
+                @Override
+                public Void run() {       
+            
+                    System.setProperty(KrbConstants.USE_SUBJECT_CREDS_ONLY_PROP, "false");
+                    
+                    String krb5Path = krb5PathSetting;
+                    
+                    if(!Strings.isNullOrEmpty(krb5Path)) {
+                        if(Paths.get(krb5Path).isAbsolute()) {
+                            log.debug("krb5_filepath: {}", krb5Path);
+                            System.setProperty(KrbConstants.KRB5_CONF_PROP, krb5Path);
+                        } else {
+                            krb5Path = configDir.resolve(krb5Path).toAbsolutePath().toString();
+                            log.debug("krb5_filepath (resolved from {}): {}", configDir, krb5Path);
+                        }
+                        
+                        System.setProperty(KrbConstants.KRB5_CONF_PROP, krb5Path);
+                    } else {
+                        if(Strings.isNullOrEmpty(System.getProperty(KrbConstants.KRB5_CONF_PROP))) {
+                            System.setProperty(KrbConstants.KRB5_CONF_PROP, "/etc/krb5.conf");
+                            log.debug("krb5_filepath (was not set or configured, set to default): /etc/krb5.conf");
+                        }
+                    }
+                    
+                    stripRealmFromPrincipalName = settings.getAsBoolean("strip_realm_from_principal", true);
+                    acceptorPrincipal = settings.get("searchguard.kerberos.acceptor_principal");
+                    String _acceptorKeyTabPath = settings.get("searchguard.kerberos.acceptor_keytab_filepath");
+                    
+                    if(acceptorPrincipal == null || acceptorPrincipal.length() == 0) {
+                        log.error("acceptor_principal must not be null or empty. Kerberos authentication will not work");
+                        acceptorPrincipal = null;
+                    } 
+                    
+                    if(_acceptorKeyTabPath == null || _acceptorKeyTabPath.length() == 0) {
+                        log.error("searchguard.kerberos.acceptor_keytab_filepath must not be null or empty. Kerberos authentication will not work");
+                        acceptorKeyTabPath = null;
+                    } else {
+                        acceptorKeyTabPath = configDir.resolve(settings.get("searchguard.kerberos.acceptor_keytab_filepath"));
+                        
+                        if(!Files.exists(acceptorKeyTabPath)) {
+                            log.error("Unable to read keytab from {} - Maybe the file does not exist or is not readable. Kerberos authentication will not work", acceptorKeyTabPath);
+                            acceptorKeyTabPath = null;
+                        }
+                    }
+            
+                    return null;
+                }
+            });      
+            
+            log.debug("strip_realm_from_principal {}", stripRealmFromPrincipalName);
+            log.debug("acceptor_principal {}", acceptorPrincipal);
+            log.debug("acceptor_keytab_filepath {}", acceptorKeyTabPath);
         
-        log.debug("strip_realm_from_principal {}", stripRealmFromPrincipalName);
-        log.debug("acceptor_principal {}", acceptorPrincipal);
-        log.debug("acceptor_keytab_filepath {}", acceptorKeyTabPath);
+        } catch (Throwable e) {
+            log.error("Cannot construct HTTPSpnegoAuthenticator due to {}", e.getMessage());
+            log.error("Please make sure you configured 'searchguard.kerberos.acceptor_keytab_filepath' realtive to the ES config/ dir!");
+            log.error("Stacktrace", e);
+            throw e;
+        }
+
     }
     
     @Override
