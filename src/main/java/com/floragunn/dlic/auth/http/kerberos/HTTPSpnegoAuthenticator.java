@@ -65,21 +65,8 @@ public class HTTPSpnegoAuthenticator implements HTTPAuthenticator {
     public HTTPSpnegoAuthenticator(final Settings settings) {
         super();
         try {
-
-            if (settings.getAsBoolean("krb_debug", false)) {
-                System.out.println("Kerberos debug is enabled");
-                log.info("Kerberos debug is enabled on stdout");
-                JaasKrbUtil.ENABLE_DEBUG = true;
-                System.setProperty("sun.security.krb5.debug", "true");
-                System.setProperty("java.security.debug", "all");
-                System.setProperty("java.security.auth.debug", "all");
-                System.setProperty("sun.security.spnego.debug", "true");
-            } else {
-                log.debug("Kerberos debug is NOT enabled");
-            }
-            
-            final Path configDir = new Environment(settings).configFile();
-            final String krb5PathSetting =  settings.get("searchguard.kerberos.krb5_filepath");
+            final Path configDir = new Environment(settings).configFile();            
+            final String krb5PathSetting = settings.get("searchguard.kerberos.krb5_filepath");
             
             final SecurityManager sm = System.getSecurityManager();
     
@@ -90,8 +77,24 @@ public class HTTPSpnegoAuthenticator implements HTTPAuthenticator {
             AccessController.doPrivileged(new PrivilegedAction<Void>() {
                 
                 @Override
-                public Void run() {                        
-                    
+                public Void run() {       
+
+                    try {
+                        if (settings.getAsBoolean("krb_debug", false)) {
+                            System.out.println("Kerberos debug is enabled");
+                            log.info("Kerberos debug is enabled on stdout");
+                            JaasKrbUtil.ENABLE_DEBUG = true;
+                            System.setProperty("sun.security.krb5.debug", "true");
+                            System.setProperty("java.security.debug", "all");
+                            System.setProperty("java.security.auth.debug", "all");
+                            System.setProperty("sun.security.spnego.debug", "true");
+                        } else {
+                            log.debug("Kerberos debug is NOT enabled");
+                        }
+                    } catch (Exception e) {
+                        log.error("Unable to enable krb_debug due to ", e);
+                    }
+
                     System.setProperty(KrbConstants.USE_SUBJECT_CREDS_ONLY_PROP, "false");
                     
                     String krb5Path = krb5PathSetting;
