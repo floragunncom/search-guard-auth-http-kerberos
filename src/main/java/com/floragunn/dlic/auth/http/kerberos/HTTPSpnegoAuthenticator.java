@@ -28,6 +28,7 @@ import javax.security.auth.Subject;
 import javax.security.auth.login.LoginException;
 import javax.xml.bind.DatatypeConverter;
 
+import org.elasticsearch.ExceptionsHelper;
 import org.elasticsearch.SpecialPermission;
 import org.elasticsearch.common.logging.ESLogger;
 import org.elasticsearch.common.logging.Loggers;
@@ -83,18 +84,21 @@ public class HTTPSpnegoAuthenticator implements HTTPAuthenticator {
 
                     try {
                         if (settings.getAsBoolean("krb_debug", false)) {
-                            System.out.println("Kerberos debug is enabled");
-                            log.info("Kerberos debug is enabled on stdout");
                             JaasKrbUtil.ENABLE_DEBUG = true;
                             System.setProperty("sun.security.krb5.debug", "true");
-                            System.setProperty("java.security.debug", "all");
-                            System.setProperty("java.security.auth.debug", "all");
+                            System.setProperty("java.security.debug", "gssloginconfig,logincontext,configparser,configfile");
                             System.setProperty("sun.security.spnego.debug", "true");
+                            System.out.println("Kerberos debug is enabled");
+                            System.err.println("Kerberos debug is enabled");
+                            log.info("Kerberos debug is enabled on stdout");
                         } else {
                             log.debug("Kerberos debug is NOT enabled");
                         }
-                    } catch (Exception e) {
+                    } catch (Throwable e) {
                         log.error("Unable to enable krb_debug due to ", e);
+                        System.err.println("Unable to enable krb_debug due to "+ExceptionsHelper.stackTrace(e));
+                        System.out.println("Unable to enable krb_debug due to");
+                        e.printStackTrace();
                     }
 
                     System.setProperty(KrbConstants.USE_SUBJECT_CREDS_ONLY_PROP, "false");
