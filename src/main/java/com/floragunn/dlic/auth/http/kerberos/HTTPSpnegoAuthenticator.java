@@ -33,6 +33,8 @@ import org.elasticsearch.SpecialPermission;
 import org.elasticsearch.common.logging.ESLogger;
 import org.elasticsearch.common.logging.Loggers;
 import org.elasticsearch.common.settings.Settings;
+import org.elasticsearch.common.xcontent.XContentBuilder;
+import org.elasticsearch.common.xcontent.XContentFactory;
 import org.elasticsearch.env.Environment;
 import org.elasticsearch.rest.BytesRestResponse;
 import org.elasticsearch.rest.RestChannel;
@@ -55,9 +57,9 @@ public class HTTPSpnegoAuthenticator implements HTTPAuthenticator {
     static {
         printLicenseInfo();
     }
-    
+        
     protected final ESLogger log = Loggers.getLogger(this.getClass());
-    
+
     private boolean stripRealmFromPrincipalName;
     private String acceptorPrincipal;
     private Path acceptorKeyTabPath;
@@ -270,7 +272,14 @@ public class HTTPSpnegoAuthenticator implements HTTPAuthenticator {
 
     @Override
     public boolean reRequestAuthentication(final RestChannel channel, AuthCredentials creds) {
-        final BytesRestResponse wwwAuthenticateResponse = new BytesRestResponse(RestStatus.UNAUTHORIZED);
+    	final BytesRestResponse wwwAuthenticateResponse;
+    	XContentBuilder response = getNegotiateResponseBody();
+    	
+    	if (response != null) {
+        	wwwAuthenticateResponse = new BytesRestResponse(RestStatus.UNAUTHORIZED, response);        	
+        } else {
+        	wwwAuthenticateResponse = new BytesRestResponse(RestStatus.UNAUTHORIZED, response);
+        }
         
         if(creds == null || creds.getNativeCredentials() == null) {
             wwwAuthenticateResponse.addHeader("WWW-Authenticate", "Negotiate");
@@ -349,6 +358,25 @@ public class HTTPSpnegoAuthenticator implements HTTPAuthenticator {
 
         return null;
     }
+    
+	private XContentBuilder getNegotiateResponseBody() {
+		try {
+			XContentBuilder negotiateResponseBody = XContentFactory.jsonBuilder();
+			negotiateResponseBody.startObject();
+			negotiateResponseBody.field("error");
+			negotiateResponseBody.startObject();
+			negotiateResponseBody.field("header");
+			negotiateResponseBody.startObject();
+			negotiateResponseBody.field("WWW-Authenticate", "Negotiate");
+			negotiateResponseBody.endObject();
+			negotiateResponseBody.endObject();
+			negotiateResponseBody.endObject();
+			return negotiateResponseBody;
+		} catch (Exception ex) {
+			log.error("Can't construct response body", ex);
+			return null;
+		}
+	}
     
     private static String stripRealmName(String name, boolean strip){
         if (strip && name != null) {
