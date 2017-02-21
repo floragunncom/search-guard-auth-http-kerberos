@@ -55,6 +55,8 @@ import com.google.common.base.Strings;
 
 public class HTTPSpnegoAuthenticator implements HTTPAuthenticator {
 
+    private static final String EMPTY_STRING = "";
+
     static {
         printLicenseInfo();
     }
@@ -278,7 +280,7 @@ public class HTTPSpnegoAuthenticator implements HTTPAuthenticator {
     	if (response != null) {
         	wwwAuthenticateResponse = new BytesRestResponse(RestStatus.UNAUTHORIZED, response);        	
         } else {
-        	wwwAuthenticateResponse = new BytesRestResponse(RestStatus.UNAUTHORIZED, response);
+        	wwwAuthenticateResponse = new BytesRestResponse(RestStatus.UNAUTHORIZED, EMPTY_STRING);
         }
         
         if(creds == null || creds.getNativeCredentials() == null) {
