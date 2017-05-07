@@ -1,8 +1,6 @@
 # Search Guard Kerberos/SPNEGO Authentication
 
-<p align="center">
-![](https://raw.githubusercontent.com/floragunncom/sg-assets/master/logo/sg_dlic_small.png) 
-
+![Logo](https://raw.githubusercontent.com/floragunncom/sg-assets/master/logo/sg_dlic_small.png) 
 
 ## About this module
 This module for [Search Guard](https://github.com/floragunncom/search-guard) adds Kerberos/SPNEGO authentication.
