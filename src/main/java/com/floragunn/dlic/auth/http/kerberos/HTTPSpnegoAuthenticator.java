@@ -37,6 +37,7 @@ import org.elasticsearch.common.util.concurrent.ThreadContext;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
 import org.elasticsearch.env.Environment;
+//import org.elasticsearch.env.Environment;
 import org.elasticsearch.rest.BytesRestResponse;
 import org.elasticsearch.rest.RestChannel;
 import org.elasticsearch.rest.RestRequest;
@@ -67,10 +68,10 @@ public class HTTPSpnegoAuthenticator implements HTTPAuthenticator {
     private String acceptorPrincipal;
     private Path acceptorKeyTabPath;
 
-    public HTTPSpnegoAuthenticator(final Settings settings) {
+    public HTTPSpnegoAuthenticator(final Settings settings, final Path configPath) {
         super();
         try {
-            final Path configDir = new Environment(settings).configFile();            
+            final Path configDir = new Environment(settings, configPath).configFile();            
             final String krb5PathSetting = settings.get("searchguard.kerberos.krb5_filepath");
             
             final SecurityManager sm = System.getSecurityManager();
@@ -453,6 +454,6 @@ public class HTTPSpnegoAuthenticator implements HTTPAuthenticator {
         System.out.println("for commercial use in production.");
         System.out.println("You have to obtain a license if you ");
         System.out.println("use it in production.");
-        System.out.println("***********************************************");
+        System.out.println("***********************************************"+System.lineSeparator());
     }
 }
