@@ -22,18 +22,6 @@
   <description>Provide Kerberos authentication for elasticsearch</description>
   <url>https://github.com/floragunncom/search-guard-auth-http-kerberos</url>
   <inceptionYear>2016</inceptionYear>
-  
-    <repositories>
-      <repository>
-        <id>lucene-repository</id>
-        <name>Lucene Maven</name>
-        <url>https://download.elasticsearch.org/lucenesnapshots/a128fcb</url>
-        <snapshots>
-          <enabled>true</enabled>
-          <updatePolicy>always</updatePolicy>
-        </snapshots>
-      </repository>
-    </repositories>
 
   <distributionManagement>
     <snapshotRepository>
@@ -48,7 +36,7 @@
 
   <properties>
     <sg2.version>6.x-HEAD-SNAPSHOT</sg2.version>
-    <elasticsearch.version>6.0.0-beta2</elasticsearch.version>
+    <elasticsearch.version>6.0.0-rc1</elasticsearch.version>
     <apache.ds.version>2.0.0-M21</apache.ds.version>
     <dependency.locations.enabled>false</dependency.locations.enabled>
   </properties>
