@@ -87,7 +87,7 @@ public class HTTPSpnegoAuthenticator implements HTTPAuthenticator {
 
                     try {
                         if (settings.getAsBoolean("krb_debug", false)) {
-                            JaasKrbUtil.ENABLE_DEBUG = true;
+                            JaasKrbUtil.setDebug(true);
                             System.setProperty("sun.security.krb5.debug", "true");
                             System.setProperty("java.security.debug", "gssloginconfig,logincontext,configparser,configfile");
                             System.setProperty("sun.security.spnego.debug", "true");
@@ -100,8 +100,7 @@ public class HTTPSpnegoAuthenticator implements HTTPAuthenticator {
                     } catch (Throwable e) {
                         log.error("Unable to enable krb_debug due to ", e);
                         System.err.println("Unable to enable krb_debug due to "+ExceptionsHelper.stackTrace(e));
-                        System.out.println("Unable to enable krb_debug due to");
-                        e.printStackTrace();
+                        System.out.println("Unable to enable krb_debug due to "+ExceptionsHelper.stackTrace(e));
                     }
 
                     System.setProperty(KrbConstants.USE_SUBJECT_CREDS_ONLY_PROP, "false");
@@ -248,7 +247,6 @@ public class HTTPSpnegoAuthenticator implements HTTPAuthenticator {
                             // Ignore
                         }
                     }
-                    //TODO subject logout
                 }
 
                 if (principal == null) {

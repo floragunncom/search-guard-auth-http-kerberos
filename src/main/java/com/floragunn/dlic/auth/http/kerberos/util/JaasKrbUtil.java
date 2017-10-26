@@ -41,9 +41,13 @@ import javax.security.auth.login.LoginException;
 */
 public final class JaasKrbUtil {
 
- public static boolean ENABLE_DEBUG = false;
+ private static boolean debug = false;
 
  private JaasKrbUtil() {
+ }
+ 
+ public static void setDebug(final boolean debug) {
+     JaasKrbUtil.debug = debug;
  }
 
  public static Subject loginUsingPassword(final String principal, final String password) throws LoginException {
@@ -125,7 +129,7 @@ public final class JaasKrbUtil {
          options.put("renewTGT", "false");
          options.put("refreshKrb5Config", "true");
          options.put("isInitiator", String.valueOf(initiator));
-         options.put("debug", String.valueOf(ENABLE_DEBUG));
+         options.put("debug", String.valueOf(debug));
 
          return new AppConfigurationEntry[] { new AppConfigurationEntry(getKrb5LoginModuleName(),
                  AppConfigurationEntry.LoginModuleControlFlag.REQUIRED, options) };
@@ -152,7 +156,7 @@ public final class JaasKrbUtil {
          options.put("refreshKrb5Config", "true");
          options.put("isInitiator", "true");
          options.put("ticketCache", clientCredentialPath.toAbsolutePath().toString());
-         options.put("debug", String.valueOf(ENABLE_DEBUG));
+         options.put("debug", String.valueOf(debug));
 
          return new AppConfigurationEntry[] { new AppConfigurationEntry(getKrb5LoginModuleName(),
                  AppConfigurationEntry.LoginModuleControlFlag.REQUIRED, options) };
@@ -176,7 +180,7 @@ public final class JaasKrbUtil {
          options.put("renewTGT", "true");
          options.put("refreshKrb5Config", "true");
          options.put("isInitiator", "true");
-         options.put("debug", String.valueOf(ENABLE_DEBUG));
+         options.put("debug", String.valueOf(debug));
 
          return new AppConfigurationEntry[] { new AppConfigurationEntry(getKrb5LoginModuleName(),
                  AppConfigurationEntry.LoginModuleControlFlag.REQUIRED, options) };
