@@ -155,9 +155,8 @@ public class HTTPSpnegoAuthenticator implements HTTPAuthenticator {
             log.debug("acceptor_keytab_filepath {}", acceptorKeyTabPath);
         
         } catch (Throwable e) {
-            log.error("Cannot construct HTTPSpnegoAuthenticator due to {}", e.getMessage());
+            log.error("Cannot construct HTTPSpnegoAuthenticator due to {}", e.getMessage(), e);
             log.error("Please make sure you configured 'searchguard.kerberos.acceptor_keytab_filepath' realtive to the ES config/ dir!");
-            log.error("Stacktrace", e);
             throw e;
         }
 
@@ -226,17 +225,17 @@ public class HTTPSpnegoAuthenticator implements HTTPAuthenticator {
                     principal = Subject.doAs(subject, new AuthenticateAction(log, gssContext, stripRealmFromPrincipalName));
 
                 } catch (final LoginException e) {
-                    log.error("Login exception due to {}", e, e.toString());
+                    log.error("Login exception due to", e);
                     return null;
                 } catch (final GSSException e) {
-                    log.error("Ticket validation not successful due to {}", e, e.toString());
+                    log.error("Ticket validation not successful due to", e);
                     return null;
                 } catch (final PrivilegedActionException e) {
                     final Throwable cause = e.getCause();
                     if (cause instanceof GSSException) {
-                        log.warn("Service login not successful due to {}", e, e.toString());
+                        log.warn("Service login not successful due to", e);
                     } else {
-                        log.error("Service login not successful due to {}", e, e.toString());
+                        log.error("Service login not successful due to", e);
                     }
                     return null;
                 } finally {
