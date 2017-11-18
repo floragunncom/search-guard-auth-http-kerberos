@@ -59,7 +59,7 @@ public class HTTPSpnegoAuthenticator implements HTTPAuthenticator {
     private static final String EMPTY_STRING = "";
 
     static {
-        printLicenseInfo();
+        //printLicenseInfo();
     }
     
     protected final Logger log = LogManager.getLogger(this.getClass());
