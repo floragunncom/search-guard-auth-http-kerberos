@@ -47,6 +47,7 @@ import org.ietf.jgss.GSSCredential;
 import org.ietf.jgss.GSSException;
 import org.ietf.jgss.GSSManager;
 import org.ietf.jgss.GSSName;
+import org.ietf.jgss.Oid;
 
 import com.floragunn.dlic.auth.http.kerberos.util.JaasKrbUtil;
 import com.floragunn.dlic.auth.http.kerberos.util.KrbConstants;
@@ -208,9 +209,10 @@ public class HTTPSpnegoAuthenticator implements HTTPAuthenticator {
                     final int credentialLifetime = GSSCredential.INDEFINITE_LIFETIME;
 
                     final PrivilegedExceptionAction<GSSCredential> action = new PrivilegedExceptionAction<GSSCredential>() {
+			final Oid[] oidList = new Oid[]{KrbConstants.SPNEGO, KrbConstants.KRB5MECH};
                         @Override
                         public GSSCredential run() throws GSSException {
-                            return manager.createCredential(null, credentialLifetime, KrbConstants.SPNEGO, GSSCredential.ACCEPT_ONLY);
+                            return manager.createCredential(null, credentialLifetime, oidList, GSSCredential.ACCEPT_ONLY);
                         }
                     };
                     gssContext = manager.createContext(Subject.doAs(subject, action));
